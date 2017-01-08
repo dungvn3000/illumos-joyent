@@ -684,7 +684,23 @@ vgatext_polled_copy(
 static int
 vgatext_cons_clear(struct gfxp_fb_softc *softc, struct vis_consclear *ca)
 {
-	return (ENOTSUP);
+	uint16_t val, fg, *base;
+	int i;
+
+	if (ca->bg_color == 0)		/* bright white */
+		fg = 1;			/* black */
+	else
+		fg = 8;
+
+	val = (solaris_color_to_pc_color[ca->bg_color & 0xf] << 4) |
+	    solaris_color_to_pc_color[fg];
+	val = (val << 8) | ' ';
+
+	base = (uint16_t *)softc->console.vga.current_base;
+	for (i = 0; i < TEXT_ROWS * TEXT_COLS; i++)
+		base[i] = val;
+
+	return (0);
 }
 
 static void
@@ -738,7 +754,7 @@ vgatext_hide_cursor(struct gfxp_fb_softc *softc)
 {
 	uint8_t msl, s;
 
-	if (vgatext_silent)
+	if (softc->silent)
 		return;
 
 	msl = vga_get_crtc(&softc->console.vga.regs, VGA_CRTC_MAX_S_LN) & 0x1f;
