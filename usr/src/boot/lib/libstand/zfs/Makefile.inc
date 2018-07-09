@@ -13,24 +13,8 @@
 # Copyright 2016 Toomas Soome <tsoome@me.com>
 #
 
-include $(SRC)/Makefile.master
-
-LIB=		zfsboot
-
-clean: clobber
-
-clobber:
-	$(RM) machine x86 $(OBJS) libzfsboot.a
-
-CC=     $(GNUC_ROOT)/bin/gcc
-
-CFLAGS=		-Os
-CFLAGS +=       -fPIC -ffreestanding -msoft-float
-CFLAGS +=       -mno-mmx -mno-3dnow -mno-sse2 -mno-sse3 -mno-sse
-CFLAGS +=       -mno-avx -mno-aes -std=gnu99
-
-SRCS +=		$(SRC)/boot/sys/boot/zfs/zfs.c
-SRCS +=		$(SRC)/boot/sys/boot/zfs/gzip.c
+SRCS +=		$(ZFSSRC)/zfs.c
+SRCS +=		$(ZFSSRC)/gzip.c
 SRCS +=		$(SRC)/common/crypto/edonr/edonr.c
 SRCS +=		$(SRC)/common/crypto/skein/skein.c
 SRCS +=		$(SRC)/common/crypto/skein/skein_iv.c
@@ -44,34 +28,13 @@ OBJS +=		skein_iv.o
 OBJS +=		skein_block.o
 OBJS +=		list.o
 
-CPPFLAGS=	-D_STANDALONE -nostdinc -I../../../../include -I../..
-CPPFLAGS +=	-I../../common -I../../.. -I.. -I.
-CPPFLAGS +=	-I../../../../lib/libstand
-CPPFLAGS +=	-I../../../../lib/libz
+CPPFLAGS +=	-I../../common
 CPPFLAGS +=	-I../../../cddl/boot/zfs
-CPPFLAGS +=	-I$(SRC)/uts/common
 
 # Do not unroll skein loops, reduce code size
 CPPFLAGS +=	-DSKEIN_LOOP=111
 
-#include ../../Makefile.inc
-
-CPPFLAGS +=	-I$(SRC)/uts/common
-
-CLEANFILES +=    machine
-
-machine:
-	$(RM) machine
-	$(SYMLINK) ../../../$(MACHINE)/include machine
-
-x86:
-	$(RM) x86
-	$(SYMLINK) ../../../x86/include x86
-
-libzfsboot.a: $(OBJS)
-	$(AR) $(ARFLAGS) $@ $(OBJS)
-
-%.o:	$(SRC)/boot/sys/boot/zfs/%.c
+%.o:	$(ZFSSRC)/%.c
 	$(COMPILE.c) -o $@ $<
 
 %.o:	$(SRC)/common/crypto/edonr/%.c
@@ -83,4 +46,4 @@ libzfsboot.a: $(OBJS)
 %.o:	$(SRC)/common/list/%.c
 	$(COMPILE.c) -DNDEBUG $<
 
-zfs.o: $(SRC)/boot/sys/boot/zfs/zfsimpl.c
+zfs.o: $(ZFSSRC)/zfsimpl.c
