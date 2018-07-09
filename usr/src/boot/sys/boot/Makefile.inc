@@ -45,7 +45,7 @@ CFLAGS=		-Os -fPIC -ffreestanding -fno-builtin
 CFLAGS +=	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 -mno-sse3 -msoft-float
 CFLAGS +=	-mno-avx -mno-aes
 CFLAGS +=	-std=gnu99
-CFLAGS +=	-Wall
+CFLAGS +=	-Wall -Werror
 CCASFLAGS=	-fPIC -Wa,--divide
 ASFLAGS=	--divide
 
