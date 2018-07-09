@@ -16,7 +16,6 @@
 # loader.help build needs better awk
 AWK=		/usr/xpg4/bin/awk
 CC=		$(GNUC_ROOT)/bin/gcc
-AS=		$(GNU_ROOT)/bin/gas
 LD=		$(GNU_ROOT)/bin/gld
 OBJCOPY=	$(GNU_ROOT)/bin/gobjcopy
 OBJDUMP=	$(GNU_ROOT)/bin/gobjdump
