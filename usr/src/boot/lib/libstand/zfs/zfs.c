@@ -35,9 +35,9 @@
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/queue.h>
+#include <sys/stddef.h>
 #include <disk.h>
 #include <part.h>
-#include <stddef.h>
 #include <stdarg.h>
 #include <string.h>
 #include <bootstrap.h>
