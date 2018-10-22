@@ -24,6 +24,7 @@
  * Copyright 2015 Nexenta Systems, Inc.  All rights reserved.
  * Copyright 2014 Toomas Soome <tsoome@me.com>
  * Copyright 2018 OmniOS Community Edition (OmniOSce) Association.
+ * Copyright 2018 Joyent, Inc.
  */
 
 #include <stdio.h>
@@ -61,9 +62,11 @@ static struct uuid_to_ptag {
 	{ EFI_SWAP, V_SWAP },
 	{ EFI_USR, V_USR },
 	{ EFI_BACKUP, V_BACKUP },
+	{ EFI_UNUSED, V_UNASSIGNED },
 	{ EFI_VAR, V_VAR },
 	{ EFI_HOME, V_HOME },
 	{ EFI_ALTSCTR, V_ALTSCTR },
+	{ EFI_UNUSED, V_UNASSIGNED },
 	{ EFI_RESERVED, V_RESERVED },
 	{ EFI_SYSTEM, V_SYSTEM },		/* V_SYSTEM is 0xc */
 	{ EFI_LEGACY_MBR, 0x10 },
@@ -131,12 +134,95 @@ int efi_debug = 0;
 extern unsigned int	efi_crc32(const unsigned char *, unsigned int);
 static int		efi_read(int, struct dk_gpt *);
 
+/*
+ * In normal operation, libefi just passes everything down to the kernel driver
+ * (and - usually - cmlb), as that code needs to react to any partitioning
+ * changes by changing devices nodes under /dev/?dsk/ and the like.
+ *
+ * However, if we are running against an un-labeled lofi device on an older
+ * version of illumos, these ioctl()s aren't emulated.  This can be a problem if
+ * we're in a non-global zone, which doesn't support labeled lofi, and our
+ * kernel is downrev.
+ *
+ * In this case, we'll simply emulate the ioctl()s that libefi actually needs,
+ * except those for efi_type(). They basically boil down to simple reads and
+ * writes, though this does skip a bunch of error checking.
+ *
+ * As a final wrinkle, rather than rely on an updated libefi, smartos-live's
+ * format_image tool directly builds and uses this source.
+ */
+static int
+do_ioctl(int fd, int cmd, void *arg)
+{
+	struct dk_cinfo cinfo;
+	struct dk_minfo minfo;
+	dk_efi_t *efi = arg;
+	int saved_errno;
+	size_t len;
+	int error;
+
+	error = ioctl(fd, cmd, arg);
+
+	saved_errno = errno;
+
+	if (error != -1 || errno != ENOTTY ||
+	    ioctl(fd, DKIOCINFO, (caddr_t)&cinfo) != 0 ||
+	    strcmp(cinfo.dki_cname, "lofi") != 0 ||
+	    ioctl(fd, DKIOCGMEDIAINFO, (caddr_t)&minfo) != 0) {
+		errno = saved_errno;
+		return (error);
+	}
+
+	switch (cmd) {
+	case DKIOCGMBOOT:
+		len = (size_t)pread(fd, arg, minfo.dki_lbsize, 0);
+		error = (len == minfo.dki_lbsize) ? 0 : -1;
+		break;
+
+	case DKIOCSMBOOT:
+		len = (size_t)pwrite(fd, arg, minfo.dki_lbsize, 0);
+		error = (len == minfo.dki_lbsize) ? 0 : -1;
+		break;
+
+	case DKIOCGETEFI:
+		len = (size_t)pread(fd, (caddr_t)(uintptr_t)efi->dki_data_64,
+		    efi->dki_length, efi->dki_lba * minfo.dki_lbsize);
+		error = (len == efi->dki_length) ? 0 : -1;
+		break;
+
+	case DKIOCSETEFI:
+		len = (size_t)pwrite(fd, (caddr_t)(uintptr_t)efi->dki_data_64,
+		    efi->dki_length, efi->dki_lba * minfo.dki_lbsize);
+		error = (len == efi->dki_length) ? 0 : -1;
+		break;
+
+	default:
+		errno = saved_errno;
+		break;
+	}
+
+	return (error);
+}
+
+static int
+efi_ioctl(int fd, int cmd, dk_efi_t *dk_ioc)
+{
+	void *data = dk_ioc->dki_data;
+	int error;
+
+	dk_ioc->dki_data_64 = (uint64_t)(uintptr_t)data;
+	error = do_ioctl(fd, cmd, (void *)dk_ioc);
+	dk_ioc->dki_data = data;
+
+	return (error);
+}
+
 static int
 read_disk_info(int fd, diskaddr_t *capacity, uint_t *lbsize)
 {
 	struct dk_minfo		disk_info;
 
-	if ((ioctl(fd, DKIOCGMEDIAINFO, (caddr_t)&disk_info)) == -1)
+	if ((do_ioctl(fd, DKIOCGMEDIAINFO, (caddr_t)&disk_info)) == -1)
 		return (errno);
 	*capacity = disk_info.dki_capacity;
 	*lbsize = disk_info.dki_lbsize;
@@ -182,6 +268,7 @@ efi_alloc_and_init(int fd, uint32_t nparts, struct dk_gpt **vtoc)
 			"the maximum number of partitions supported is %lu\n",
 			    MAX_PARTS);
 		}
+		errno = EINVAL;
 		return (-1);
 	}
 
@@ -232,7 +319,7 @@ efi_alloc_and_read(int fd, struct dk_gpt **vtoc)
 	if ((mbr = calloc(lbsize, 1)) == NULL)
 		return (VT_ERROR);
 
-	if ((ioctl(fd, DKIOCGMBOOT, (caddr_t)mbr)) == -1) {
+	if ((do_ioctl(fd, DKIOCGMBOOT, (caddr_t)mbr)) == -1) {
 		free(mbr);
 		return (VT_ERROR);
 	}
@@ -288,19 +375,6 @@ efi_alloc_and_read(int fd, struct dk_gpt **vtoc)
 	}
 
 	return (rval);
-}
-
-static int
-efi_ioctl(int fd, int cmd, dk_efi_t *dk_ioc)
-{
-	void *data = dk_ioc->dki_data;
-	int error;
-
-	dk_ioc->dki_data_64 = (uint64_t)(uintptr_t)data;
-	error = ioctl(fd, cmd, (void *)dk_ioc);
-	dk_ioc->dki_data = data;
-
-	return (error);
 }
 
 static int
@@ -367,7 +441,7 @@ efi_read(int fd, struct dk_gpt *vtoc)
 	/*
 	 * get the partition number for this file descriptor.
 	 */
-	if (ioctl(fd, DKIOCINFO, (caddr_t)&dki_info) == -1) {
+	if (do_ioctl(fd, DKIOCINFO, (caddr_t)&dki_info) == -1) {
 		if (efi_debug) {
 			(void) fprintf(stderr, "DKIOCINFO errno 0x%x\n", errno);
 		}
@@ -391,7 +465,7 @@ efi_read(int fd, struct dk_gpt *vtoc)
 	}
 
 	/* get the LBA size */
-	if (ioctl(fd, DKIOCGMEDIAINFO, (caddr_t)&disk_info) == -1) {
+	if (do_ioctl(fd, DKIOCGMEDIAINFO, (caddr_t)&disk_info) == -1) {
 		if (efi_debug) {
 			(void) fprintf(stderr,
 			    "assuming LBA 512 bytes %d\n",
@@ -984,7 +1058,7 @@ efi_write(int fd, struct dk_gpt *vtoc)
 	int			nblocks;
 	diskaddr_t		lba_backup_gpt_hdr;
 
-	if (ioctl(fd, DKIOCINFO, (caddr_t)&dki_info) == -1) {
+	if (do_ioctl(fd, DKIOCINFO, (caddr_t)&dki_info) == -1) {
 		if (efi_debug)
 			(void) fprintf(stderr, "DKIOCINFO errno 0x%x\n", errno);
 		switch (errno) {
@@ -1169,6 +1243,8 @@ efi_free(struct dk_gpt *ptr)
  * Input: File descriptor
  * Output: 1 if disk has an EFI label, or > 2TB with no VTOC or legacy MBR.
  * Otherwise 0.
+ *
+ * This always returns 0 for an un-labeled lofi device.
  */
 int
 efi_type(int fd)
