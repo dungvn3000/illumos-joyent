@@ -319,6 +319,49 @@ also menu-namespace also menu-command-helpers
 ;
 
 \
+\ Disaster Recovery boot
+\
+
+: dr_enabled? ( -- flag )
+	s" noimport" getenv -1 <> dup if
+		swap drop ( c-addr flag -- flag )
+	then
+;
+
+: dr_enable ( -- )
+	s" set noimport=true" evaluate
+	s" smartos" getenv? if
+		s" set standalone=true" evaluate
+	then
+;
+
+: dr_disable ( -- )
+	s" noimport" unsetenv
+	s" standalone" unsetenv
+;
+
+: init_dr ( N -- N )
+	dr_enabled? if
+		toggle_menuitem ( n -- n )
+	then
+;
+
+: toggle_dr ( N -- N TRUE )
+	toggle_menuitem
+	menu-redraw
+
+	\ Now we're going to make the change effective
+
+	dup toggle_stateN @ 0= if
+		dr_disable
+	else
+		dr_enable
+	then
+
+	TRUE \ loop menu again
+;
+
+\
 \ Escape to Prompt
 \
 
