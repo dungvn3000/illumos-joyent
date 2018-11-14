@@ -47,6 +47,30 @@ variable debug_state
 also menu-namespace also menu-command-helpers
 
 \
+\ Rollback to previous platform image.
+\ Used by Joyent Triton
+\
+: rollback_boot ( N -- NOTREACHED )
+	dup
+	s" prev-platform" getenv s" bootfile" setenv
+	s" prev-archive" getenv s" boot_archive" set-module-path
+	s" prev-hash" getenv s" boot_archive.hash" set-module-path
+	0 boot ( state -- )
+;
+
+\
+\ Boot from ipxe kernel
+\ Used by Joyent Triton
+\
+: ipxe_boot ( N -- NOTREACHED )
+	dup
+	s" ipxe-bootfile" getenv s" bootfile" setenv
+	s" ipxe-archive" getenv s" boot_archive" set-module-path
+	s" boot_archive.hash" disable-module
+	0 boot ( state -- )
+;
+
+\
 \ Boot
 \
 
