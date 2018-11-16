@@ -38,6 +38,8 @@ MINOR = 1.0
 
 lib: libficl.a
 
+vm.o := CFLAGS += -_gcc=-Wno-clobbered
+
 # static library build
 libficl.a: $(OBJECTS)
 	$(AR) $(ARFLAGS) libficl.a $(OBJECTS)
