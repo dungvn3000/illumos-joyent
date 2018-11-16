@@ -16,13 +16,8 @@
 include $(SRC)/Makefile.master
 include $(SRC)/boot/sys/boot/Makefile.inc
 
-ASFLAGS =	-fPIC
 CPPFLAGS +=	-I../../../../include -I$(SASRC)
 CPPFLAGS +=	-I../../..  -I../../../sys -I. -I$(SRC)/common/bzip2
-
-CFLAGS +=	-msoft-float
-CFLAGS +=	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 -mno-sse3
-CFLAGS +=	-mno-avx -mno-aes -std=gnu99
 
 $(LIBRARY): $(SRCS) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)

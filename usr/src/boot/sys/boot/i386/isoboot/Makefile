@@ -29,7 +29,6 @@ ORG2= 0x0
 
 ISOBOOTSIZE= 30720
 
-CFLAGS += -fno-reorder-functions
 CPPFLAGS += -DBOOTPROG=\"isoboot\" \
 	-DSIOPRT=${BOOT_COMCONSOLE_PORT} \
 	-DSIOFMT=${B2SIOFMT} \

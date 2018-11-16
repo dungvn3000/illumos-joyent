@@ -17,8 +17,6 @@
 
 LOADER_ADDRESS=0x200000
 CFLAGS +=	-m32
-LDFLAGS +=	-nostdlib
-
 CCASFLAGS +=	-m32
 ASFLAGS +=	--32
 

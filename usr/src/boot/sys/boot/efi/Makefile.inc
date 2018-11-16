@@ -14,8 +14,4 @@
 #
 
 # Options used when building app-specific efi components
-CFLAGS +=	-fshort-wchar
-CFLAGS +=	-fident -finline -fno-inline-functions -fno-asm
-CFLAGS +=	-fdiagnostics-show-option -nodefaultlibs
-CFLAGS +=	-fno-inline-small-functions -fno-inline-functions-called-once
-CFLAGS +=	-fno-ipa-cp
+CFLAGS +=	-_gcc=-fshort-wchar

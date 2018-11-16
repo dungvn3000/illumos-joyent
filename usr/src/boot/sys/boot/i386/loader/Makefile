@@ -18,7 +18,6 @@ include $(SRC)/Makefile.master
 include $(SRC)/boot/Makefile.version
 include $(SRC)/boot/sys/boot/Makefile.inc
 
-CFLAGS +=	-fno-reorder-functions
 CPPFLAGS +=	-I../../../../include -I../../..
 CPPFLAGS +=	-I$(SRC)/uts/intel/sys/acpi
 CPPFLAGS +=	-I../../../../lib/libz
@@ -85,7 +84,6 @@ CPPFLAGS +=	-I.
 CLEANFILES=	vers.c ${LOADER} ${LOADER}.sym ${LOADER}.bin loader.help
 CLEANFILES +=	$(FONT).c
 
-CFLAGS +=	-Wall
 LDFLAGS=	-static -Ttext 0x0
 
 # i386 standalone support library

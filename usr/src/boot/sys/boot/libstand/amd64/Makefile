@@ -21,7 +21,7 @@ all install:    $(LIBRARY)
 
 include ../Makefile.com
 
-CFLAGS +=	-m64 -mno-red-zone
+CFLAGS +=	-m64 $(CFLAGS64)
 CCASFLAGS +=	-m64
 
 CLEANFILES += x86

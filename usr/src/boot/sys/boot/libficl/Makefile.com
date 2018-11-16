@@ -27,9 +27,6 @@ CPPFLAGS += -I$(FICLDIR) -I../../common -I$(PNGLITE)
 # For multiboot2.h, must be last, to avoid conflicts
 CPPFLAGS += -I$(SRC)/uts/common
 
-CFLAGS += -Wall -mno-mmx -mno-3dnow -mno-sse
-CFLAGS += -mno-sse2 -mno-sse3 -msoft-float -std=gnu99
-
 OBJECTS= dictionary.o system.o fileaccess.o float.o double.o prefix.o search.o
 OBJECTS += softcore.o stack.o tools.o vm.o primitives.o unix.o utility.o
 OBJECTS += hash.o callback.o word.o loader.o

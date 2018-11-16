@@ -32,7 +32,6 @@ REL1=	0x700
 ORG1=	0x7c00
 ORG2=	0x0
 
-CFLAGS += -fno-reorder-functions
 CPPFLAGS += -DBOOTPROG=\"gptzfsboot\" \
 	-DGPT -DBOOT2 \
 	-DLOADER_MBR_SUPPORT -DLOADER_GPT_SUPPORT \

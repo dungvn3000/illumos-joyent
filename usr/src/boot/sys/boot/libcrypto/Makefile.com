@@ -23,14 +23,6 @@ install:
 SRCS +=	sha1.c digest.c
 OBJS += sha1.o digest.o
 
-CFLAGS += -msoft-float
-CFLAGS += -mno-mmx -mno-3dnow -mno-sse2 -mno-sse3 -mno-sse
-CFLAGS += -mno-avx -mno-aes -std=gnu99
-
-#.if ${MACHINE_CPUARCH} == "aarch64"
-#CFLAGS+=	-msoft-float -mgeneral-regs-only
-#.endif
-
 CPPFLAGS += -I. -I../../../../include -I../../..
 CPPFLAGS += -I../../../../lib/libstand
 

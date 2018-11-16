@@ -15,7 +15,6 @@
 
 # loader.help build needs better awk
 AWK=		/usr/xpg4/bin/awk
-CC=		$(GNUC_ROOT)/bin/gcc
 LD=		$(GNU_ROOT)/bin/gld
 OBJCOPY=	$(GNU_ROOT)/bin/gobjcopy
 OBJDUMP=	$(GNU_ROOT)/bin/gobjdump
@@ -39,12 +38,15 @@ ZFSSRC=		$(SASRC)/zfs
 
 # set standard values
 AS_CPPFLAGS=
-CPPFLAGS=	-D_STANDALONE -nostdinc
-CFLAGS=		-Os -fPIC -ffreestanding -fno-builtin
-CFLAGS +=	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 -mno-sse3 -msoft-float
-CFLAGS +=	-mno-avx -mno-aes
-CFLAGS +=	-std=gnu99
-CFLAGS +=	-Wall -Werror
+CPPFLAGS=	-D_STANDALONE -_gcc=-nostdinc
+CFLAGS64=	-_gcc=-mno-red-zone
+
+CFLAGS=		-_gcc=-Os -_gcc=-fPIC -_gcc=-ffreestanding -_gcc=-fno-builtin
+CFLAGS +=	-_gcc=-mno-mmx -_gcc=-mno-3dnow -_gcc=-mno-sse -_gcc=-mno-sse2
+CFLAGS +=	-_gcc=-mno-sse3 -_gcc=-msoft-float
+CFLAGS +=	-_gcc=-mno-avx -_gcc=-mno-aes
+CFLAGS +=	-_gcc=-Wall -_gcc=-Werror
+CFLAGS +=	$(CCNOAUTOINLINE) $(CCNOREORDER) $(CSTD_GNU99)
 CCASFLAGS=	-fPIC -Wa,--divide
 ASFLAGS=	--divide
 

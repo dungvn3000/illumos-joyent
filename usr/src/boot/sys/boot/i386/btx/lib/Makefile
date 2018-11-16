@@ -23,12 +23,12 @@ PROG=	crt0.o
 SRCS=	btxcsu.S btxsys.s btxv86.s
 OBJS=	btxcsu.o btxsys.o btxv86.o
 
-LDFLAGS=-Wl,-r -nostdlib
+LDFLAGS =-r
 
 all install: $(PROG)
 
 $(PROG): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS)
+	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
 clobber: clean
 
