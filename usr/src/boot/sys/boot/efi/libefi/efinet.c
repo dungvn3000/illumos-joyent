@@ -313,7 +313,7 @@ efinet_dev_init()
 		    IH, NULL, EFI_OPEN_PROTOCOL_EXCLUSIVE);
 		if (status != EFI_SUCCESS) {
 			printf("Unable to open network interface %d for "
-			    "exclusive access: %lu\n", i,
+			    "exclusive access: %lu\n", (int)i,
 			    EFI_ERROR_CODE(status));
 		}
 
