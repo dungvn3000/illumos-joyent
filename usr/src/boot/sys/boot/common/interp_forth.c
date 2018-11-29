@@ -146,7 +146,7 @@ bf_command(ficlVm *vm)
 	command_errmsg = NULL;
 	break;
     case CMD_FATAL:
-	panic("%s\n", command_errmsg);
+	panic("%s", command_errmsg);
     }
 
     free(line);
@@ -271,13 +271,13 @@ bf_init(char *rc)
     /* Put all private definitions in a "builtins" vocabulary */
     rv = ficlVmEvaluate(bf_vm, "vocabulary builtins also builtins definitions");
     if (rv != FICL_VM_STATUS_OUT_OF_TEXT) {
-	panic("error interpreting forth: %d\n", rv);
+	panic("error interpreting forth: %d", rv);
     }
 
     /* Builtin constructor word  */
     rv = ficlVmEvaluate(bf_vm, BUILTIN_CONSTRUCTOR);
     if (rv != FICL_VM_STATUS_OUT_OF_TEXT) {
-	panic("error interpreting forth: %d\n", rv);
+	panic("error interpreting forth: %d", rv);
     }
 
     /* make all commands appear as Forth words */
@@ -287,21 +287,21 @@ bf_init(char *rc)
 		bf_command, FICL_WORD_DEFAULT);
 	rv = ficlVmEvaluate(bf_vm, "forth definitions builtins");
 	if (rv != FICL_VM_STATUS_OUT_OF_TEXT) {
-		panic("error interpreting forth: %d\n", rv);
+		panic("error interpreting forth: %d", rv);
 	}
 	sprintf(create_buf, "builtin: %s", (*cmdp)->c_name);
 	rv = ficlVmEvaluate(bf_vm, create_buf);
 	if (rv != FICL_VM_STATUS_OUT_OF_TEXT) {
-		panic("error interpreting forth: %d\n", rv);
+		panic("error interpreting forth: %d", rv);
 	}
 	rv = ficlVmEvaluate(bf_vm, "builtins definitions");
 	if (rv != FICL_VM_STATUS_OUT_OF_TEXT) {
-		panic("error interpreting forth: %d\n", rv);
+		panic("error interpreting forth: %d", rv);
 	}
     }
     rv = ficlVmEvaluate(bf_vm, "only forth definitions");
     if (rv != FICL_VM_STATUS_OUT_OF_TEXT) {
-	panic("error interpreting forth: %d\n", rv);
+	panic("error interpreting forth: %d", rv);
     }
 
     /*
