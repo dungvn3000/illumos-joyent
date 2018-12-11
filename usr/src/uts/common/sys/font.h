@@ -42,6 +42,23 @@ enum vfnt_map {
 	VFNT_MAPS		/* Number of maps. */
 };
 
+/*
+ * If the custom console font was loaded, pass it for kernel as an module.
+ * We do not just load the font file, as the font file needs to be processed,
+ * and the early boot has very little resources. So we just set up the
+ * needed structures and make an copy of the byte arrays.
+ *
+ * Note we can not copy the structures one to one due to the pointer size,
+ * so we record the data by using fixed size structure.
+ */
+struct font_info {
+        int32_t fi_checksum;
+        uint32_t fi_width;
+        uint32_t fi_height;
+        uint32_t fi_bitmap_size;
+        uint32_t fi_map_count[VFNT_MAPS];
+};
+
 struct font_map {
 	uint32_t font_src;	/* Source glyph. */
 	uint16_t font_dst;	/* Target glyph. */
@@ -58,8 +75,8 @@ struct font {
 };
 
 typedef	struct  bitmap_data {
-	short		width;
-	short		height;
+	uint32_t	width;
+	uint32_t	height;
 	uint32_t	compressed_size;
 	uint32_t	uncompressed_size;
 	uint8_t		*compressed_data;
