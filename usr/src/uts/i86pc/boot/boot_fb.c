@@ -99,14 +99,6 @@ static void boot_fb_setpos(int, int);
 static void boot_fb_shiftline(int);
 static void boot_fb_eraseline_impl(uint16_t, uint16_t);
 
-struct font_info {
-	int32_t fi_checksum;
-	uint32_t fi_width;
-	uint32_t fi_height;
-	uint32_t fi_bitmap_size;
-	uint32_t fi_map_count[VFNT_MAPS];
-};
-
 static void
 xbi_init_font(struct xboot_info *xbi)
 {
