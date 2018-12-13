@@ -38,6 +38,7 @@ extern "C" {
 
 #include <sys/types.h>
 #include <sys/font.h>
+#include <sys/rgb.h>
 #if !defined(_BOOT)
 #include <sys/sunddi.h>
 #include <sys/sunldi.h>
@@ -165,20 +166,12 @@ struct tem_size {
 	screen_size_t	height;
 };
 
-typedef struct {
-	uint8_t red[16];
-	uint8_t green[16];
-	uint8_t blue[16];
-} text_cmap_t;
-
 /* Combined color and 32bit tem char */
 typedef struct term_char {
 	text_color_t	tc_fg_color;
 	text_color_t	tc_bg_color;
 	tem_char_t	tc_char;
 } term_char_t;
-
-extern text_cmap_t cmap4_to_24;
 
 /*
  * State structure for each virtual terminal emulator

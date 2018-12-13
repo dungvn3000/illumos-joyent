@@ -31,6 +31,7 @@
 #include <sys/bootinfo.h>
 #include <sys/boot_console.h>
 #include <sys/bootconf.h>
+#include <sys/rgb.h>
 #include "boot_console_impl.h"
 
 #define	P2ROUNDUP(x, align)	(-(-(x) & -(align)))
@@ -69,29 +70,6 @@ static struct font	cf_font;
 
 static struct font	boot_fb_font; /* set by set_font() */
 static uint8_t		glyph[MAX_GLYPH];
-
-/* color translation */
-typedef struct {
-	uint8_t red[16];
-	uint8_t green[16];
-	uint8_t blue[16];
-} text_cmap_t;
-
-/* BEGIN CSTYLED */
-/*                             Bk  Rd  Gr  Br  Bl  Mg  Cy  Wh */
-static uint8_t dim_xlate[] = {  1,  5,  3,  7,  2,  6,  4,  8 };
-static uint8_t brt_xlate[] = {  9, 13, 11, 15, 10, 14, 12,  0 };
-/* END CSTYLED */
-
-static text_cmap_t cmap4_to_24 = {
-/* BEGIN CSTYLED */
-/* 0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
-  Wh+  Bk   Bl   Gr   Cy   Rd   Mg   Br   Wh   Bk+  Bl+  Gr+  Cy+  Rd+  Mg+  Yw */
-  0xff,0x00,0x00,0x00,0x00,0x80,0x80,0x80,0x80,0x40,0x00,0x00,0x00,0xff,0xff,0xff,
-  0xff,0x00,0x00,0x80,0x80,0x00,0x00,0x80,0x80,0x40,0x00,0xff,0xff,0x00,0x00,0xff,
-  0xff,0x00,0x80,0x00,0x80,0x00,0x80,0x00,0x80,0x40,0xff,0x00,0xff,0x00,0xff,0x00
-/* END CSTYLED */
-};
 
 static void boot_fb_putchar(int);
 static void boot_fb_eraseline(void);
