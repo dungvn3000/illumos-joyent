@@ -1133,7 +1133,6 @@ error:
  * and le_bswap indicates whether a byteswap is needed to get this block
  * into little endian format.
  */
-/* ARGSUSED */
 int
 zio_crypt_do_objset_hmacs(zio_crypt_key_t *key, void *data, uint_t datalen,
     boolean_t should_bswap, uint8_t *portable_mac, uint8_t *local_mac)
@@ -1217,7 +1216,8 @@ zio_crypt_do_objset_hmacs(zio_crypt_key_t *key, void *data, uint_t datalen,
 	 * The local MAC protects the user and group accounting. If these
 	 * objects are not present, the local MAC is zeroed out.
 	 */
-	if ((osp->os_userused_dnode.dn_type == DMU_OT_NONE &&
+	if ((datalen >= OBJSET_PHYS_SIZE &&
+	    osp->os_userused_dnode.dn_type == DMU_OT_NONE &&
 	    osp->os_groupused_dnode.dn_type == DMU_OT_NONE) ||
 	    (datalen <= OBJSET_OLD_PHYS_SIZE)) {
 		bzero(local_mac, ZIO_OBJSET_MAC_LEN);
@@ -1251,15 +1251,19 @@ zio_crypt_do_objset_hmacs(zio_crypt_key_t *key, void *data, uint_t datalen,
 	}
 
 	/* add in fields from the user accounting dnodes */
-	ret = zio_crypt_do_dnode_hmac_updates(ctx, key->zk_version,
-	    should_bswap, &osp->os_userused_dnode);
-	if (ret)
-		goto error;
+	if (osp->os_userused_dnode.dn_type != DMU_OT_NONE) {
+		ret = zio_crypt_do_dnode_hmac_updates(ctx, key->zk_version,
+		    should_bswap, &osp->os_userused_dnode);
+		if (ret)
+			goto error;
+	}
 
-	ret = zio_crypt_do_dnode_hmac_updates(ctx, key->zk_version,
-	    should_bswap, &osp->os_groupused_dnode);
-	if (ret)
-		goto error;
+	if (osp->os_groupused_dnode.dn_type != DMU_OT_NONE) {
+		ret = zio_crypt_do_dnode_hmac_updates(ctx, key->zk_version,
+		    should_bswap, &osp->os_groupused_dnode);
+		if (ret)
+			goto error;
+	}
 
 	/* store the final digest in a temporary buffer and copy what we need */
 	cd.cd_length = SHA512_DIGEST_LENGTH;
@@ -1862,9 +1866,6 @@ zio_crypt_init_uios(boolean_t encrypt, uint64_t version, dmu_object_type_t ot,
 error:
 	return (ret);
 }
-
-void *failed_decrypt_buf;
-int faile_decrypt_size;
 
 /*
  * Primary encryption / decryption entrypoint for zio data.
