@@ -17,7 +17,7 @@ include $(SRC)/Makefile.master
 include $(SRC)/boot/sys/boot/Makefile.inc
 
 CPPFLAGS +=	-I../../../../include -I$(SASRC)
-CPPFLAGS +=	-I../../..  -I../../../sys -I. -I$(SRC)/common/bzip2
+CPPFLAGS +=	-I../../..  -I. -I$(SRC)/common/bzip2
 
 $(LIBRARY): $(SRCS) $(OBJS)
 	$(AR) $(ARFLAGS) $@ $(OBJS)
