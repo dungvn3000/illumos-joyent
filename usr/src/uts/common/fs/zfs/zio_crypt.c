@@ -373,6 +373,7 @@ error:
 
 void *failed_decrypt_buf;
 int failed_decrypt_size;
+int ignore_hash_failure = 1;
 
 /*
  * This function handles all encryption and decryption in zfs. When
@@ -1962,6 +1963,9 @@ error:
 		bzero(enc_keydata, keydata_len);
 	zio_crypt_destroy_uio(&puio);
 	zio_crypt_destroy_uio(&cuio);
+
+	if (ignore_hash_failure && ret == ECKSUM)
+		ret = 0;
 
 	return (ret);
 }
