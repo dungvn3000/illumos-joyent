@@ -1648,6 +1648,7 @@ dmu_copy_from_buf(objset_t *os, uint64_t object, uint64_t offset,
 	dmu_buf_t *dst_handle;
 	dmu_buf_impl_t *dstdb;
 	dmu_buf_impl_t *srcdb = (dmu_buf_impl_t *)handle;
+	dmu_object_type_t type;
 	arc_buf_t *abuf;
 	uint64_t datalen;
 	boolean_t byteorder;
@@ -1663,11 +1664,15 @@ dmu_copy_from_buf(objset_t *os, uint64_t object, uint64_t offset,
 	dstdb = (dmu_buf_impl_t *)dst_handle;
 	datalen = arc_buf_size(srcdb->db_buf);
 
+	DB_DNODE_ENTER(dstdb);
+	type = DB_DNODE(dstdb)->dn_type;
+	DB_DNODE_EXIT(dstdb);
+
 	/* allocated an arc buffer that matches the type of srcdb->db_buf */
 	if (arc_is_encrypted(srcdb->db_buf)) {
 		arc_get_raw_params(srcdb->db_buf, &byteorder, salt, iv, mac);
 		abuf = arc_loan_raw_buf(os->os_spa, dmu_objset_id(os),
-		    byteorder, salt, iv, mac, DB_DNODE(dstdb)->dn_type,
+		    byteorder, salt, iv, mac, type,
 		    datalen, arc_buf_lsize(srcdb->db_buf),
 		    arc_get_compression(srcdb->db_buf));
 	} else {
@@ -1675,7 +1680,7 @@ dmu_copy_from_buf(objset_t *os, uint64_t object, uint64_t offset,
 		ASSERT3U(arc_get_compression(srcdb->db_buf),
 		    ==, ZIO_COMPRESS_OFF);
 		abuf = arc_loan_buf(os->os_spa,
-		    DMU_OT_IS_METADATA(DB_DNODE(dstdb)->dn_type), datalen);
+		    DMU_OT_IS_METADATA(type), datalen);
 	}
 
 	ASSERT3U(datalen, ==, arc_buf_size(abuf));
@@ -1718,8 +1723,6 @@ dmu_assign_arcbuf_dnode(dnode_t *dn, uint64_t offset, arc_buf_t *buf,
 		ASSERT3U(arc_get_compression(buf), ==, ZIO_COMPRESS_OFF);
 		ASSERT(!(buf->b_flags & ARC_BUF_FLAG_COMPRESSED));
 
-		os = dn->dn_objset;
-		object = dn->dn_object;
 		dbuf_rele(db, FTAG);
 		dmu_write(os, object, offset, blksz, buf->b_data, tx);
 		dmu_return_arcbuf(buf);
