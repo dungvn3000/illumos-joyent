@@ -95,6 +95,7 @@ typedef uint32_t tem_char_t;	/* 32bit char to support UTF-8 */
 #define	TEM_ATTR_BRIGHT_FG	0x0020
 #define	TEM_ATTR_BRIGHT_BG	0x0040
 #define	TEM_ATTR_TRANSPARENT	0x0080
+#define	TEM_ATTR_IMAGE		0x0100
 
 #define	ANSI_COLOR_BLACK	0
 #define	ANSI_COLOR_RED		1
