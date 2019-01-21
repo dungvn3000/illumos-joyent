@@ -62,11 +62,9 @@ static struct uuid_to_ptag {
 	{ EFI_SWAP, V_SWAP },
 	{ EFI_USR, V_USR },
 	{ EFI_BACKUP, V_BACKUP },
-	{ EFI_UNUSED, V_UNASSIGNED },
 	{ EFI_VAR, V_VAR },
 	{ EFI_HOME, V_HOME },
 	{ EFI_ALTSCTR, V_ALTSCTR },
-	{ EFI_UNUSED, V_UNASSIGNED },
 	{ EFI_RESERVED, V_RESERVED },
 	{ EFI_SYSTEM, V_SYSTEM },		/* V_SYSTEM is 0xc */
 	{ EFI_LEGACY_MBR, 0x10 },

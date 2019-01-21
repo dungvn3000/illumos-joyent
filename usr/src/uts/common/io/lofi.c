@@ -1772,8 +1772,11 @@ lofi_urw(struct lofi_state *lsp, uint16_t fmode, diskaddr_t off, size_t size,
 	struct uio uio;
 	iovec_t iov;
 
+	/*
+	 * 1024 * 1024 apes cmlb_tg_max_efi_xfer as a reasonable max.
+	 */
 	if (size == 0 ||
-	    size > 1024 * 1024 || /* cmlb_tg_max_efi_xfer */
+	    size > 1024 * 1024 ||
 	    size % (1 << lsp->ls_lbshift))
 		return (EINVAL);
 
