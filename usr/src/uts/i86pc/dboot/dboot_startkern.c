@@ -1480,32 +1480,54 @@ dboot_add_memlist(uint64_t start, uint64_t end)
 	 * that any system of this type will give us the new-style (0x40)
 	 * memlist, so we need not fix up the other path below.
 	 *
-	 * However, only grub has support for not using this range. So if we're
-	 * booted via loader, we can't do this.  Since it appears that the "bad"
-	 * BIOS is no longer relevant, we'll only enable this if given a
-	 * suitable boot property.
+	 * However, if we're boot-loaded from something that doesn't have a
+	 * RICHMOND-16 workaround (which on many systems is just fine), it could
+	 * actually use this region for the boot modules; if we remove it from
+	 * the memlist, we'll keel over when trying to access the region.
+	 *
+	 * So, if we see that a module intersects the region, we presume it's
+	 * OK.
 	 */
-	if (find_boot_prop("RICHMOND-16") != NULL) {
-		if (start < CORRUPT_REGION_START &&
-		    end > CORRUPT_REGION_START) {
-			memlists[memlists_used].addr = start;
-			memlists[memlists_used].size =
-			    CORRUPT_REGION_START - start;
-			++memlists_used;
-			if (end > CORRUPT_REGION_END)
-				start = CORRUPT_REGION_END;
-			else
-				return;
-		}
 
-		if (start >= CORRUPT_REGION_START &&
-		    start < CORRUPT_REGION_END) {
-			if (end <= CORRUPT_REGION_END)
-				return;
-			start = CORRUPT_REGION_END;
+	if (find_boot_prop("disable-RICHMOND-16") != NULL)
+		goto out;
+
+	for (uint32_t i = 0; i < bi->bi_module_cnt; i++) {
+		native_ptr_t mod_start = modules[i].bm_addr;
+		native_ptr_t mod_end = modules[i].bm_addr + modules[i].bm_size;
+
+		if (mod_start < CORRUPT_REGION_END &&
+		    mod_end >= CORRUPT_REGION_START) {
+			if (prom_debug) {
+				dboot_printf("disabling RICHMOND-16 workaround "
+				"due to module #%d: "
+				"name %s addr %lx size %lx\n",
+				    i, (char *)(uintptr_t)modules[i].bm_name,
+				    (ulong_t)modules[i].bm_addr,
+				    (ulong_t)modules[i].bm_size);
+			}
+			goto out;
 		}
 	}
 
+	if (start < CORRUPT_REGION_START && end > CORRUPT_REGION_START) {
+		memlists[memlists_used].addr = start;
+		memlists[memlists_used].size =
+		    CORRUPT_REGION_START - start;
+		++memlists_used;
+		if (end > CORRUPT_REGION_END)
+			start = CORRUPT_REGION_END;
+		else
+			return;
+	}
+
+	if (start >= CORRUPT_REGION_START && start < CORRUPT_REGION_END) {
+		if (end <= CORRUPT_REGION_END)
+			return;
+		start = CORRUPT_REGION_END;
+	}
+
+out:
 	memlists[memlists_used].addr = start;
 	memlists[memlists_used].size = end - start;
 	++memlists_used;
